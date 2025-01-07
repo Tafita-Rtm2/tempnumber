@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporary Number</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+        .output { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Generate a Temporary Number</h1>
+    <button onclick="generateTempNumber()">Generate Number</button>
+    <div class="output">
+        <p id="tempNumber"></p>
+        <p id="messages"></p>
+    </div>
+
+    <script>
+        let encodedEmail = "";
+
+        async function generateTempNumber() {
+            const response = await fetch('/generate');
+            const data = await response.json();
+            document.getElementById('tempNumber').innerText = `Temporary Number: ${data.temp_number}`;
+            encodedEmail = data.encoded_email;
+            fetchMessages();
+        }
+
+        async function fetchMessages() {
+            if (!encodedEmail) return;
+            const response = await fetch(`/messages?encoded_email=${encodedEmail}`);
+            const data = await response.json();
+            let messagesHTML = '<h3>Messages:</h3>';
+            if (data.length === 0) {
+                messagesHTML += '<p>No messages received yet.</p>';
+            } else {
+                data.forEach(msg => {
+                    messagesHTML += `<p>From: ${msg.from} - Subject: ${msg.subject}</p>`;
+                });
+            }
+            document.getElementById('messages').innerHTML = messagesHTML;
+        }
+    </script>
+</body>
+</html>
