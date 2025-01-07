@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temporary Number</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-        .output { margin-top: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Numéro Temporaire</title>
 </head>
 <body>
-    <h1>Generate a Temporary Number</h1>
-    <button onclick="generateTempNumber()">Generate Number</button>
-    <div class="output">
-        <p id="tempNumber"></p>
-        <p id="messages"></p>
-    </div>
+  <h1>Générateur de Numéro Temporaire</h1>
+  <button id="generateBtn">Générer un Numéro</button>
+  <p id="result"></p>
+  <h2>Messages</h2>
+  <ul id="messages"></ul>
 
-    <script>
-        let encodedEmail = "";
+  <script>
+    const generateBtn = document.getElementById("generateBtn");
+    const result = document.getElementById("result");
+    const messagesList = document.getElementById("messages");
 
-        async function generateTempNumber() {
-            const response = await fetch('/generate');
-            const data = await response.json();
-            document.getElementById('tempNumber').innerText = `Temporary Number: ${data.temp_number}`;
-            encodedEmail = data.encoded_email;
-            fetchMessages();
+    generateBtn.addEventListener("click", async () => {
+      result.textContent = "Génération en cours...";
+      messagesList.innerHTML = "";
+      try {
+        // Appel à l'API pour générer un numéro
+        const response = await fetch("/generate");
+        const data = await response.json();
+
+        if (data.error) {
+          result.textContent = "Erreur: " + data.error;
+        } else {
+          result.textContent = `Numéro Temporaire : ${data.tempNumber}`;
+          const encodedEmail = data.encodedEmail;
+
+          // Récupérer les messages associés
+          const messagesResponse = await fetch(`/messages?encodedEmail=${encodedEmail}`);
+          const messages = await messagesResponse.json();
+
+          if (Array.isArray(messages)) {
+            messages.forEach(message => {
+              const li = document.createElement("li");
+              li.textContent = `De : ${message.from} | Sujet : ${message.subject}`;
+              messagesList.appendChild(li);
+            });
+          } else {
+            messagesList.innerHTML = "<li>Aucun message reçu.</li>";
+          }
         }
-
-        async function fetchMessages() {
-            if (!encodedEmail) return;
-            const response = await fetch(`/messages?encoded_email=${encodedEmail}`);
-            const data = await response.json();
-            let messagesHTML = '<h3>Messages:</h3>';
-            if (data.length === 0) {
-                messagesHTML += '<p>No messages received yet.</p>';
-            } else {
-                data.forEach(msg => {
-                    messagesHTML += `<p>From: ${msg.from} - Subject: ${msg.subject}</p>`;
-                });
-            }
-            document.getElementById('messages').innerHTML = messagesHTML;
-        }
-    </script>
+      } catch (error) {
+        result.textContent = "Erreur lors de la génération.";
+      }
+    });
+  </script>
 </body>
 </html>
