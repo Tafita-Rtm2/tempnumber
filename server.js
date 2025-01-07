@@ -2,9 +2,13 @@ const express = require("express");
 const axios = require("axios");
 const atob = require("atob");
 const btoa = require("btoa");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Servir les fichiers statiques (comme index.html)
+app.use(express.static(path.join(__dirname, "public")));
 
 // Générer une adresse email temporaire
 async function generateEmail() {
@@ -52,6 +56,11 @@ app.get("/messages", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Rediriger toutes les autres routes vers index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Lancer le serveur
