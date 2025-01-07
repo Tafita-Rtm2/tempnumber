@@ -27,12 +27,15 @@ def get_messages(encoded_email):
 
 @app.route('/generate', methods=['GET'])
 def generate():
-    email = generate_email()
-    temp_number, encoded_email = encrypt_email(email)
-    return jsonify({
-        "temp_number": temp_number,
-        "encoded_email": encoded_email
-    })
+    try:
+        email = generate_email()
+        temp_number, encoded_email = encrypt_email(email)
+        return jsonify({
+            "temp_number": temp_number,
+            "encoded_email": encoded_email
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/messages', methods=['GET'])
 def messages():
@@ -46,4 +49,5 @@ def messages():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Permet à Flask d'écouter sur l'interface publique
+    app.run(host='0.0.0.0', port=5000)
