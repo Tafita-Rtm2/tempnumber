@@ -3,53 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Générateur de Numéro Temporaire</title>
+  <title>Numéro Temporaire</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      padding: 20px;
+    }
+    h1 {
+      color: #444;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table th, table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    table th {
+      background: #f4f4f4;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <h1>Générateur de Numéro Temporaire</h1>
-  <button id="generateBtn">Générer un Numéro</button>
-  <p id="result"></p>
-  <h2>Messages reçus</h2>
-  <ul id="messages"></ul>
+  <div class="container">
+    <h1>Numéro Temporaire</h1>
+    <button id="generateBtn">Générer un Numéro</button>
+    <h2>Numéros Générés</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          <th>Messages</th>
+        </tr>
+      </thead>
+      <tbody id="numbersList">
+        <!-- Les numéros générés seront ajoutés ici -->
+      </tbody>
+    </table>
+    <h2 id="messagesTitle" style="display: none;">Messages Reçus</h2>
+    <ul id="messagesList"></ul>
+  </div>
 
   <script>
     const generateBtn = document.getElementById("generateBtn");
-    const result = document.getElementById("result");
-    const messagesList = document.getElementById("messages");
+    const numbersList = document.getElementById("numbersList");
+    const messagesTitle = document.getElementById("messagesTitle");
+    const messagesList = document.getElementById("messagesList");
 
-    generateBtn.addEventListener("click", async () => {
-      result.textContent = "Génération en cours...";
+    const numbers = JSON.parse(localStorage.getItem("numbers")) || {};
+
+    function updateNumbersUI() {
+      numbersList.innerHTML = "";
+      for (const [number, email] of Object.entries(numbers)) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${number}</td>
+          <td><button onclick="viewMessages('${email}')">Voir Messages</button></td>
+        `;
+        numbersList.appendChild(row);
+      }
+    }
+
+    async function generateNumber() {
+      try {
+        const response = await fetch("/generate");
+        const { number, email } = await response.json();
+        numbers[number] = email;
+        localStorage.setItem("numbers", JSON.stringify(numbers));
+        updateNumbersUI();
+      } catch (error) {
+        alert("Erreur lors de la génération du numéro.");
+      }
+    }
+
+    async function viewMessages(email) {
       messagesList.innerHTML = "";
+      messagesTitle.style.display = "block";
 
       try {
-        // Appel à l'API pour générer un numéro
-        const response = await fetch("/generate");
-        const data = await response.json();
+        const response = await fetch(`/messages?email=${email}`);
+        const messages = await response.json();
 
-        if (data.error) {
-          result.textContent = "Erreur: " + data.error;
+        if (messages.length === 0) {
+          messagesList.innerHTML = "<li>Aucun message reçu.</li>";
         } else {
-          result.textContent = `Numéro généré : ${data.number}`;
-          const email = data.email;
-
-          // Vérifier les messages associés
-          const messagesResponse = await fetch(`/messages?email=${email}`);
-          const messages = await messagesResponse.json();
-
-          if (Array.isArray(messages)) {
-            messages.forEach(message => {
-              const li = document.createElement("li");
-              li.textContent = `De : ${message.from} | Sujet : ${message.subject}`;
-              messagesList.appendChild(li);
-            });
-          } else {
-            messagesList.innerHTML = "<li>Aucun message reçu.</li>";
-          }
+          messages.forEach(msg => {
+            const li = document.createElement("li");
+            li.textContent = `De: ${msg.from}, Sujet: ${msg.subject}`;
+            messagesList.appendChild(li);
+          });
         }
       } catch (error) {
-        result.textContent = "Erreur lors de la génération.";
+        alert("Erreur lors de la récupération des messages.");
       }
-    });
+    }
+
+    generateBtn.addEventListener("click", generateNumber);
+    updateNumbersUI();
   </script>
 </body>
 </html>
