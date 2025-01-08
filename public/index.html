@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Numéro Temporaire</title>
+  <title>Générateur de Numéro Temporaire</title>
 </head>
 <body>
   <h1>Générateur de Numéro Temporaire</h1>
   <button id="generateBtn">Générer un Numéro</button>
   <p id="result"></p>
-  <h2>Messages</h2>
+  <h2>Messages reçus</h2>
   <ul id="messages"></ul>
 
   <script>
@@ -20,6 +20,7 @@
     generateBtn.addEventListener("click", async () => {
       result.textContent = "Génération en cours...";
       messagesList.innerHTML = "";
+
       try {
         // Appel à l'API pour générer un numéro
         const response = await fetch("/generate");
@@ -28,11 +29,11 @@
         if (data.error) {
           result.textContent = "Erreur: " + data.error;
         } else {
-          result.textContent = `Numéro Temporaire : ${data.tempNumber}`;
-          const encodedEmail = data.encodedEmail;
+          result.textContent = `Numéro généré : ${data.number}`;
+          const email = data.email;
 
-          // Récupérer les messages associés
-          const messagesResponse = await fetch(`/messages?encodedEmail=${encodedEmail}`);
+          // Vérifier les messages associés
+          const messagesResponse = await fetch(`/messages?email=${email}`);
           const messages = await messagesResponse.json();
 
           if (Array.isArray(messages)) {
