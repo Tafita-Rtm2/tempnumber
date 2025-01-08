@@ -1,16 +1,15 @@
 const express = require("express");
 const axios = require("axios");
-const atob = require("atob");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Servir les fichiers statiques (comme index.html)
-app.use(express.static(path.join(__dirname, "public")));
-
 // Liste des préfixes opérateurs
 const operatorPrefixes = ["38", "34", "32", "33"];
+
+// Servir les fichiers statiques (comme index.html)
+app.use(express.static(path.join(__dirname, "public")));
 
 // Générer un numéro malgache valide
 function generateMalagasyNumber() {
@@ -27,7 +26,7 @@ async function generateEmail() {
   return response.data[0];
 }
 
-// Associer le numéro au mail temporaire
+// Associer le numéro à l'email temporaire
 async function createTemporaryNumber() {
   const email = await generateEmail();
   const number = generateMalagasyNumber();
